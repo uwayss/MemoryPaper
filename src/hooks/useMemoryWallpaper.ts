@@ -41,6 +41,11 @@ export const useMemoryWallpaper = () => {
     wallpaperBackgroundColor: DEFAULT_WALLPAPER_BACKGROUND_COLOR,
     fontSize: DEFAULT_FONT_SIZE,
   });
+  // State for the live text input, separate from saved settings.reminderText
+  const [liveReminderText, setLiveReminderText] = useState<string>(
+    settings.reminderText
+  );
+
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSettingsLoading, setIsSettingsLoading] = useState<boolean>(true);
@@ -50,10 +55,16 @@ export const useMemoryWallpaper = () => {
   const viewShotRef = useRef<ViewShot>(null);
   const insets = useSafeAreaInsets();
 
+  useEffect(() => {
+    // When settings are loaded, also update liveReminderText
+    setLiveReminderText(settings.reminderText);
+  }, [settings.reminderText]);
+
   const loadAndApplySettings = useCallback(async () => {
     setIsSettingsLoading(true);
     const loadedSettings = await loadSettings();
     setSettings(loadedSettings);
+    // liveReminderText will be updated by the useEffect above
     setIsSettingsLoading(false);
     if (loadedSettings.autoUpdateEnabled) {
       await registerAppBackgroundTask(loadedSettings.updateInterval);
@@ -66,37 +77,52 @@ export const useMemoryWallpaper = () => {
     loadAndApplySettings();
   }, [loadAndApplySettings]);
 
+  // Modified handleSettingChange
   const handleSettingChange = async <K extends keyof AppSettings>(
     key: K,
-    value: AppSettings[K]
+    value: AppSettings[K],
+    finalizeUpdate: boolean = true // Default to true for non-text changes
   ) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    await saveSettings(newSettings);
+    // Update the main settings state (for UI and non-textual changes)
+    const newSettingsSnapshot = { ...settings, [key]: value };
+    setSettings(newSettingsSnapshot);
 
-    const relevantChangeForPreGeneration =
-      key === "reminderText" ||
-      key === "textColor" ||
-      key === "wallpaperBackgroundColor" ||
-      key === "fontSize";
+    if (finalizeUpdate) {
+      // Only save and trigger side effects if finalizeUpdate is true
+      await saveSettings(newSettingsSnapshot);
 
-    if (key === "autoUpdateEnabled" || key === "updateInterval") {
-      if (newSettings.autoUpdateEnabled) {
-        await registerAppBackgroundTask(newSettings.updateInterval);
-        if (newSettings.reminderText.trim()) {
-          await handlePreGenerateImages(newSettings);
+      const relevantChangeForPreGeneration =
+        key === "reminderText" ||
+        key === "textColor" ||
+        key === "wallpaperBackgroundColor" ||
+        key === "fontSize";
+
+      if (key === "autoUpdateEnabled" || key === "updateInterval") {
+        if (newSettingsSnapshot.autoUpdateEnabled) {
+          await registerAppBackgroundTask(newSettingsSnapshot.updateInterval);
+          if (newSettingsSnapshot.reminderText.trim()) {
+            await handlePreGenerateImages(newSettingsSnapshot);
+          }
+        } else {
+          await unregisterAppBackgroundTask();
         }
-      } else {
-        await unregisterAppBackgroundTask();
+      }
+
+      if (
+        relevantChangeForPreGeneration &&
+        newSettingsSnapshot.autoUpdateEnabled &&
+        newSettingsSnapshot.reminderText.trim()
+      ) {
+        await handlePreGenerateImages(newSettingsSnapshot);
       }
     }
+  };
 
-    if (
-      relevantChangeForPreGeneration &&
-      newSettings.autoUpdateEnabled &&
-      newSettings.reminderText.trim()
-    ) {
-      await handlePreGenerateImages(newSettings);
+  // New handler specifically for reminder text blur
+  const handleReminderTextBlur = async () => {
+    if (settings.reminderText !== liveReminderText) {
+      // Call handleSettingChange with the updated liveReminderText and finalize a true
+      handleSettingChange("reminderText", liveReminderText.trim(), true);
     }
   };
 
@@ -104,7 +130,6 @@ export const useMemoryWallpaper = () => {
     (safeInsets: EdgeInsets): TextPosition => {
       const textBlockMaxWidth = screenWidth * TEXT_BLOCK_MAX_WIDTH_FACTOR;
       const textBlockMaxHeight = screenHeight * TEXT_BLOCK_MAX_HEIGHT_FACTOR;
-
       const maxTop =
         screenHeight -
         textBlockMaxHeight -
@@ -117,7 +142,6 @@ export const useMemoryWallpaper = () => {
         (safeInsets.left || 0) -
         (safeInsets.right || 0) -
         20;
-
       const newTop =
         Math.floor(Math.random() * Math.max(0, maxTop)) +
         (safeInsets.top || 0) +
@@ -140,18 +164,15 @@ export const useMemoryWallpaper = () => {
       setStatusMessage("ViewShot reference not available for pre-generation.");
       return;
     }
-
     setIsLoading(true);
     setStatusMessage(
       `Generating ${NUM_PRE_GENERATED_IMAGES} wallpaper variations...`
     );
     const uris: string[] = [];
-
     for (let i = 0; i < NUM_PRE_GENERATED_IMAGES; i++) {
       const pos = generateSingleRandomPosition(insets);
       setCaptureSpecificPosition(pos);
       await new Promise((resolve) => setTimeout(resolve, CAPTURE_DELAY_MS));
-
       try {
         const tempUri = await captureRef(viewShotRef.current, {
           format: "png",
@@ -186,18 +207,25 @@ export const useMemoryWallpaper = () => {
   };
 
   const handleManualSetWallpaper = async () => {
-    if (!settings.reminderText.trim()) {
+    // Use liveReminderText for manual set, but ensure it's saved first if different
+    // Or, better, ensure handleReminderTextBlur has been called implicitly or explicitly.
+    // For simplicity here, we assume the user might expect the currently visible text to be used.
+    const textToSet = liveReminderText.trim();
+    if (!textToSet) {
       Alert.alert("Input Required", "Please enter text for your reminder.");
       return;
     }
-    if (isLoading || !viewShotRef.current) return;
+    // If live text is different from saved, save it now.
+    if (settings.reminderText !== textToSet) {
+      await handleSettingChange("reminderText", textToSet, true);
+    }
 
+    if (isLoading || !viewShotRef.current) return;
     setIsLoading(true);
     setStatusMessage("Generating new position for manual set...");
     const newPosition = generateSingleRandomPosition(insets);
     setCaptureSpecificPosition(newPosition);
     await new Promise((resolve) => setTimeout(resolve, CAPTURE_DELAY_MS));
-
     setStatusMessage("Capturing image for manual set...");
     try {
       const imageFileUri = await captureRef(viewShotRef.current, {
@@ -207,7 +235,6 @@ export const useMemoryWallpaper = () => {
       });
       if (!imageFileUri)
         throw new Error("Failed to capture image URI for manual set.");
-
       setStatusMessage("Setting wallpaper manually...");
       const response = await setDeviceWallpaper(imageFileUri, "home");
       if (response.success) {
@@ -236,14 +263,17 @@ export const useMemoryWallpaper = () => {
   };
 
   return {
-    settings,
+    settings, // The saved settings
+    liveReminderText, // The text currently in the input field
+    setLiveReminderText, // To update the input field text
     statusMessage,
     isLoading,
     isSettingsLoading,
     captureSpecificPosition,
     viewShotRef,
     insets,
-    handleSettingChange,
+    handleSettingChange, // For non-textual settings or direct text save
+    handleReminderTextBlur, // For saving text on blur
     handlePreGenerateImages,
     handleManualSetWallpaper,
   };

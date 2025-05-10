@@ -2,21 +2,23 @@
 import React from "react";
 import { Card, TextInput, Button } from "react-native-paper";
 import { StyleSheet } from "react-native";
-import { AppSettings } from "../../types/settings";
+// AppSettings is used by the hook, not directly by this card for reminderText value anymore
 
 interface ManualWallpaperCardProps {
-  settings: AppSettings;
+  liveReminderText: string; // Changed from settings.reminderText
   isLoading: boolean;
   statusMessage: string;
-  onReminderTextChange: (text: string) => void;
+  onLiveReminderTextChange: (text: string) => void; // New prop
+  onReminderTextBlur: () => void; // New prop
   onSetWallpaperPress: () => void;
 }
 
 export const ManualWallpaperCard: React.FC<ManualWallpaperCardProps> = ({
-  settings,
+  liveReminderText,
   isLoading,
   statusMessage,
-  onReminderTextChange,
+  onLiveReminderTextChange,
+  onReminderTextBlur,
   onSetWallpaperPress,
 }) => {
   return (
@@ -25,8 +27,9 @@ export const ManualWallpaperCard: React.FC<ManualWallpaperCardProps> = ({
       <Card.Content>
         <TextInput
           label="Reminder Text"
-          value={settings.reminderText}
-          onChangeText={onReminderTextChange}
+          value={liveReminderText} // Use liveReminderText
+          onChangeText={onLiveReminderTextChange} // Update liveReminderText
+          onBlur={onReminderTextBlur} // Trigger save logic on blur
           mode="outlined"
           style={styles.input}
           multiline

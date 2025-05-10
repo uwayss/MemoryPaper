@@ -16,6 +16,8 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("screen");
 const MainScreenContent: React.FC = () => {
   const {
     settings,
+    liveReminderText, // New
+    setLiveReminderText, // New
     statusMessage,
     isLoading,
     isSettingsLoading,
@@ -23,6 +25,7 @@ const MainScreenContent: React.FC = () => {
     viewShotRef,
     insets,
     handleSettingChange,
+    handleReminderTextBlur, // New
     handlePreGenerateImages,
     handleManualSetWallpaper,
   } = useMemoryWallpaper();
@@ -50,17 +53,16 @@ const MainScreenContent: React.FC = () => {
       keyboardShouldPersistTaps="handled"
     >
       <ManualWallpaperCard
-        settings={settings}
+        liveReminderText={liveReminderText} // Use live text for input display
         isLoading={isLoading}
         statusMessage={statusMessage}
-        onReminderTextChange={(text) =>
-          handleSettingChange("reminderText", text)
-        }
+        onLiveReminderTextChange={setLiveReminderText} // Update live text
+        onReminderTextBlur={handleReminderTextBlur} // Finalize on blur
         onSetWallpaperPress={handleManualSetWallpaper}
       />
 
       <WallpaperCustomizationCard
-        settings={settings}
+        settings={settings} // Pass full settings for other customizations
         isLoading={isLoading}
         onTextColorChange={(color) => handleSettingChange("textColor", color)}
         onBackgroundColorChange={(color) =>
@@ -98,7 +100,7 @@ const MainScreenContent: React.FC = () => {
           options={{ format: "png", quality: 0.9, result: "tmpfile" }}
         >
           <WallpaperPreview
-            text={settings.reminderText}
+            text={settings.reminderText} // ViewShot captures based on saved settings.reminderText
             textPosition={
               captureSpecificPosition || {
                 top: -screenHeight,
