@@ -1,6 +1,6 @@
 // src/services/storage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AppSettings } from "../types/settings";
+import { AppSettings, WallpaperTargetScreen } from "../types/settings";
 import {
   DEFAULT_REMINDER_TEXT,
   DEFAULT_AUTO_UPDATE_ENABLED,
@@ -8,6 +8,7 @@ import {
   DEFAULT_TEXT_COLOR,
   DEFAULT_WALLPAPER_BACKGROUND_COLOR,
   DEFAULT_FONT_SIZE,
+  DEFAULT_WALLPAPER_TARGET_SCREEN,
 } from "../config/constants";
 
 const REMINDER_TEXT_KEY = "REMINDER_TEXT";
@@ -16,6 +17,7 @@ const UPDATE_INTERVAL_KEY = "UPDATE_INTERVAL_KEY";
 const TEXT_COLOR_KEY = "TEXT_COLOR_KEY";
 const WALLPAPER_BACKGROUND_COLOR_KEY = "WALLPAPER_BACKGROUND_COLOR_KEY";
 const FONT_SIZE_KEY = "FONT_SIZE_KEY";
+const WALLPAPER_TARGET_SCREEN_KEY = "WALLPAPER_TARGET_SCREEN_KEY";
 
 const PRE_GENERATED_IMAGES_KEY = "PRE_GENERATED_IMAGES_KEY";
 const LAST_USED_IMAGE_INDEX_KEY = "LAST_USED_IMAGE_INDEX_KEY";
@@ -40,6 +42,10 @@ export const saveSettings = async (settings: AppSettings): Promise<void> => {
       FONT_SIZE_KEY,
       JSON.stringify(settings.fontSize)
     );
+    await AsyncStorage.setItem(
+      WALLPAPER_TARGET_SCREEN_KEY,
+      settings.wallpaperTargetScreen
+    );
   } catch (e) {
     console.error("Failed to save settings.", e);
   }
@@ -57,6 +63,9 @@ export const loadSettings = async (): Promise<AppSettings> => {
       WALLPAPER_BACKGROUND_COLOR_KEY
     );
     const fontSize = await AsyncStorage.getItem(FONT_SIZE_KEY);
+    const wallpaperTargetScreen = (await AsyncStorage.getItem(
+      WALLPAPER_TARGET_SCREEN_KEY
+    )) as WallpaperTargetScreen | null;
 
     return {
       reminderText: reminderText ?? DEFAULT_REMINDER_TEXT,
@@ -70,6 +79,8 @@ export const loadSettings = async (): Promise<AppSettings> => {
       wallpaperBackgroundColor:
         wallpaperBackgroundColor ?? DEFAULT_WALLPAPER_BACKGROUND_COLOR,
       fontSize: fontSize ? JSON.parse(fontSize) : DEFAULT_FONT_SIZE,
+      wallpaperTargetScreen:
+        wallpaperTargetScreen ?? DEFAULT_WALLPAPER_TARGET_SCREEN,
     };
   } catch (e) {
     console.error("Failed to load settings.", e);
@@ -80,6 +91,7 @@ export const loadSettings = async (): Promise<AppSettings> => {
       textColor: DEFAULT_TEXT_COLOR,
       wallpaperBackgroundColor: DEFAULT_WALLPAPER_BACKGROUND_COLOR,
       fontSize: DEFAULT_FONT_SIZE,
+      wallpaperTargetScreen: DEFAULT_WALLPAPER_TARGET_SCREEN,
     };
   }
 };

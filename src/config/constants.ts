@@ -22,6 +22,13 @@ export const DEFAULT_UPDATE_INTERVAL = 15; // minutes
 export const DEFAULT_TEXT_COLOR = "#FFFFFF";
 export const DEFAULT_WALLPAPER_BACKGROUND_COLOR = "#000000";
 export const DEFAULT_FONT_SIZE = 30;
+export const DEFAULT_WALLPAPER_TARGET_SCREEN = "lock" as const; // Default to lock screen
+
+export const WALLPAPER_TARGET_SCREEN_OPTIONS = [
+  { label: "Lock Screen", value: "lock" as const },
+  { label: "Home Screen", value: "home" as const },
+  { label: "Both Screens", value: "both" as const },
+];
 
 export const FONT_SIZE_OPTIONS = [
   { label: "Small (24pt)", value: 24 },

@@ -1,5 +1,5 @@
 // src/components/main/WallpaperCustomizationCard.tsx
-import React from "react";
+import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import {
   Card,
@@ -8,9 +8,13 @@ import {
   RadioButton,
   TouchableRipple,
   Divider,
+  List,
 } from "react-native-paper";
-import { AppSettings } from "../../types/settings";
-import { FONT_SIZE_OPTIONS } from "../../config/constants";
+import { AppSettings, WallpaperTargetScreen } from "../../types/settings";
+import {
+  FONT_SIZE_OPTIONS,
+  WALLPAPER_TARGET_SCREEN_OPTIONS,
+} from "../../config/constants";
 
 interface WallpaperCustomizationCardProps {
   settings: AppSettings;
@@ -18,6 +22,7 @@ interface WallpaperCustomizationCardProps {
   onTextColorChange: (color: string) => void;
   onBackgroundColorChange: (color: string) => void;
   onFontSizeChange: (size: number) => void;
+  onTargetScreenChange: (target: WallpaperTargetScreen) => void;
 }
 
 export const WallpaperCustomizationCard: React.FC<
@@ -28,88 +33,141 @@ export const WallpaperCustomizationCard: React.FC<
   onTextColorChange,
   onBackgroundColorChange,
   onFontSizeChange,
+  onTargetScreenChange,
 }) => {
+  const [expanded, setExpanded] = useState(false);
+  const handlePress = () => {
+    if (!isLoading) {
+      setExpanded(!expanded);
+    }
+  };
   const isValidHexColor = (color: string) => /^#[0-9A-F]{6}$/i.test(color);
 
   return (
     <Card style={styles.card}>
-      <Card.Title title="Wallpaper Appearance" />
-      <Card.Content>
-        <View style={styles.inputRow}>
-          <Text style={styles.colorPreviewLabel}>Text Color: </Text>
-          <View
-            style={[
-              styles.colorPreview,
-              {
-                backgroundColor: isValidHexColor(settings.textColor)
-                  ? settings.textColor
-                  : "#000000",
-              },
-            ]}
-          />
-          <TextInput
-            label="Text Color (Hex)"
-            value={settings.textColor}
-            onChangeText={onTextColorChange}
-            mode="outlined"
-            style={styles.input}
-            disabled={isLoading}
-            maxLength={7}
-            autoCapitalize="characters"
-          />
-        </View>
-        <View style={styles.inputRow}>
-          <Text style={styles.colorPreviewLabel}>Background: </Text>
-          <View
-            style={[
-              styles.colorPreview,
-              {
-                backgroundColor: isValidHexColor(
-                  settings.wallpaperBackgroundColor
-                )
-                  ? settings.wallpaperBackgroundColor
-                  : "#FFFFFF",
-              },
-            ]}
-          />
-          <TextInput
-            label="Background Color (Hex)"
-            value={settings.wallpaperBackgroundColor}
-            onChangeText={onBackgroundColorChange}
-            mode="outlined"
-            style={styles.input}
-            disabled={isLoading}
-            maxLength={7}
-            autoCapitalize="characters"
-          />
-        </View>
-        <Divider style={styles.divider} />
-        <Text variant="titleSmall" style={styles.radioGroupLabel}>
-          Font Size:
-        </Text>
-        <RadioButton.Group
-          onValueChange={(value) => onFontSizeChange(parseInt(value, 10))}
-          value={String(settings.fontSize)}
+      <Card.Content style={styles.cardContentNoVerticalPadding}>
+        <List.Accordion
+          title="Wallpaper Appearance"
+          left={(props) => <List.Icon {...props} icon="palette-outline" />}
+          expanded={expanded}
+          onPress={handlePress}
+          style={[styles.accordion, isLoading && styles.disabledAccordion]}
+          titleStyle={styles.accordionTitle}
         >
-          {FONT_SIZE_OPTIONS.map((option) => (
-            <TouchableRipple
-              key={option.value}
-              onPress={() => !isLoading && onFontSizeChange(option.value)}
-              disabled={isLoading}
+          <View style={styles.accordionInnerContent}>
+            <Text variant="titleSmall" style={styles.radioGroupLabel}>
+              Target Screen:
+            </Text>
+            <RadioButton.Group
+              onValueChange={(value) =>
+                onTargetScreenChange(value as WallpaperTargetScreen)
+              }
+              value={settings.wallpaperTargetScreen}
             >
-              <View style={styles.radioButtonRow}>
-                <RadioButton.Android
-                  value={String(option.value)}
-                  status={
-                    settings.fontSize === option.value ? "checked" : "unchecked"
+              {WALLPAPER_TARGET_SCREEN_OPTIONS.map((option) => (
+                <TouchableRipple
+                  key={option.value}
+                  onPress={() =>
+                    !isLoading && onTargetScreenChange(option.value)
                   }
                   disabled={isLoading}
-                />
-                <Text variant="bodyMedium">{option.label}</Text>
-              </View>
-            </TouchableRipple>
-          ))}
-        </RadioButton.Group>
+                >
+                  <View style={styles.radioButtonRow}>
+                    <RadioButton.Android
+                      value={option.value}
+                      status={
+                        settings.wallpaperTargetScreen === option.value
+                          ? "checked"
+                          : "unchecked"
+                      }
+                      disabled={isLoading}
+                    />
+                    <Text variant="bodyMedium">{option.label}</Text>
+                  </View>
+                </TouchableRipple>
+              ))}
+            </RadioButton.Group>
+            <Divider style={styles.divider} />
+
+            <View style={styles.inputRow}>
+              <Text style={styles.colorPreviewLabel}>Text Color: </Text>
+              <View
+                style={[
+                  styles.colorPreview,
+                  {
+                    backgroundColor: isValidHexColor(settings.textColor)
+                      ? settings.textColor
+                      : "#000000",
+                  },
+                ]}
+              />
+              <TextInput
+                label="Text Color (Hex)"
+                value={settings.textColor}
+                onChangeText={onTextColorChange}
+                mode="outlined"
+                style={styles.input}
+                disabled={isLoading}
+                maxLength={7}
+                autoCapitalize="characters"
+              />
+            </View>
+            <View style={styles.inputRow}>
+              <Text style={styles.colorPreviewLabel}>Background: </Text>
+              <View
+                style={[
+                  styles.colorPreview,
+                  {
+                    backgroundColor: isValidHexColor(
+                      settings.wallpaperBackgroundColor
+                    )
+                      ? settings.wallpaperBackgroundColor
+                      : "#FFFFFF",
+                  },
+                ]}
+              />
+              <TextInput
+                label="Background Color (Hex)"
+                value={settings.wallpaperBackgroundColor}
+                onChangeText={onBackgroundColorChange}
+                mode="outlined"
+                style={styles.input}
+                disabled={isLoading}
+                maxLength={7}
+                autoCapitalize="characters"
+              />
+            </View>
+            <Divider style={styles.divider} />
+            <Text variant="titleSmall" style={styles.radioGroupLabel}>
+              Font Size:
+            </Text>
+            <RadioButton.Group
+              onValueChange={(value) => onFontSizeChange(parseInt(value, 10))}
+              value={String(settings.fontSize)}
+            >
+              {FONT_SIZE_OPTIONS.map((option) => (
+                <TouchableRipple
+                  key={option.value}
+                  onPress={() => !isLoading && onFontSizeChange(option.value)}
+                  disabled={isLoading}
+                >
+                  <View style={styles.radioButtonRow}>
+                    <RadioButton.Android
+                      value={String(option.value)}
+                      status={
+                        settings.fontSize === option.value
+                          ? "checked"
+                          : "unchecked"
+                      }
+                      disabled={isLoading}
+                    />
+                    <Text variant="bodyMedium">{option.label}</Text>
+                  </View>
+                </TouchableRipple>
+              ))}
+            </RadioButton.Group>
+          </View>
+        </List.Accordion>
       </Card.Content>
     </Card>
   );
@@ -120,6 +178,21 @@ const styles = StyleSheet.create({
     elevation: 2,
     marginHorizontal: 16,
     marginVertical: 8,
+    overflow: "hidden",
+  },
+  cardContentNoVerticalPadding: {
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+  },
+  accordion: {},
+  disabledAccordion: {
+    opacity: 0.6,
+  },
+  accordionTitle: {},
+  accordionInnerContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   inputRow: {
     flexDirection: "row",

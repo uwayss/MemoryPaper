@@ -1,15 +1,14 @@
 // src/components/main/ManualWallpaperCard.tsx
 import React from "react";
-import { Card, TextInput, Button } from "react-native-paper";
-import { StyleSheet } from "react-native";
-// AppSettings is used by the hook, not directly by this card for reminderText value anymore
+import { StyleSheet } from "react-native"; // Removed View
+import { Card, TextInput, Button } from "react-native-paper"; // Removed Text
 
 interface ManualWallpaperCardProps {
-  liveReminderText: string; // Changed from settings.reminderText
+  liveReminderText: string;
   isLoading: boolean;
   statusMessage: string;
-  onLiveReminderTextChange: (text: string) => void; // New prop
-  onReminderTextBlur: () => void; // New prop
+  onLiveReminderTextChange: (text: string) => void;
+  onReminderTextBlur: () => void;
   onSetWallpaperPress: () => void;
 }
 
@@ -27,9 +26,9 @@ export const ManualWallpaperCard: React.FC<ManualWallpaperCardProps> = ({
       <Card.Content>
         <TextInput
           label="Reminder Text"
-          value={liveReminderText} // Use liveReminderText
-          onChangeText={onLiveReminderTextChange} // Update liveReminderText
-          onBlur={onReminderTextBlur} // Trigger save logic on blur
+          value={liveReminderText}
+          onChangeText={onLiveReminderTextChange}
+          onBlur={onReminderTextBlur}
           mode="outlined"
           style={styles.input}
           multiline
@@ -60,11 +59,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
   },
+  // Card.Content will provide default padding
   input: {
     marginBottom: 12,
   },
   button: {
     marginTop: 10,
-    marginBottom: 4,
+    marginBottom: 4, // Card.Content has bottom padding
   },
 });

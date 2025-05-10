@@ -122,6 +122,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
   },
+  // Card.Content provides default padding
   button: {
     marginTop: 10,
     marginBottom: 4,

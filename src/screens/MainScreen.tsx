@@ -10,14 +10,15 @@ import { AutomaticUpdateCard } from "../components/main/AutomaticUpdateCard";
 import { WallpaperCustomizationCard } from "../components/main/WallpaperCustomizationCard";
 import { useMemoryWallpaper } from "../hooks/useMemoryWallpaper";
 import { OFFSCREEN_PREVIEW_MULTIPLIER } from "../config/constants";
+import { WallpaperTargetScreen } from "../types/settings"; // Import type
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("screen");
 
 const MainScreenContent: React.FC = () => {
   const {
     settings,
-    liveReminderText, // New
-    setLiveReminderText, // New
+    liveReminderText,
+    setLiveReminderText,
     statusMessage,
     isLoading,
     isSettingsLoading,
@@ -25,7 +26,7 @@ const MainScreenContent: React.FC = () => {
     viewShotRef,
     insets,
     handleSettingChange,
-    handleReminderTextBlur, // New
+    handleReminderTextBlur,
     handlePreGenerateImages,
     handleManualSetWallpaper,
   } = useMemoryWallpaper();
@@ -53,22 +54,28 @@ const MainScreenContent: React.FC = () => {
       keyboardShouldPersistTaps="handled"
     >
       <ManualWallpaperCard
-        liveReminderText={liveReminderText} // Use live text for input display
+        liveReminderText={liveReminderText}
         isLoading={isLoading}
         statusMessage={statusMessage}
-        onLiveReminderTextChange={setLiveReminderText} // Update live text
-        onReminderTextBlur={handleReminderTextBlur} // Finalize on blur
+        onLiveReminderTextChange={setLiveReminderText}
+        onReminderTextBlur={handleReminderTextBlur}
         onSetWallpaperPress={handleManualSetWallpaper}
       />
 
       <WallpaperCustomizationCard
-        settings={settings} // Pass full settings for other customizations
+        settings={settings}
         isLoading={isLoading}
         onTextColorChange={(color) => handleSettingChange("textColor", color)}
         onBackgroundColorChange={(color) =>
           handleSettingChange("wallpaperBackgroundColor", color)
         }
         onFontSizeChange={(size) => handleSettingChange("fontSize", size)}
+        onTargetScreenChange={(target) =>
+          handleSettingChange(
+            "wallpaperTargetScreen",
+            target as WallpaperTargetScreen
+          )
+        }
       />
 
       <AutomaticUpdateCard
@@ -100,7 +107,7 @@ const MainScreenContent: React.FC = () => {
           options={{ format: "png", quality: 0.9, result: "tmpfile" }}
         >
           <WallpaperPreview
-            text={settings.reminderText} // ViewShot captures based on saved settings.reminderText
+            text={settings.reminderText}
             textPosition={
               captureSpecificPosition || {
                 top: -screenHeight,

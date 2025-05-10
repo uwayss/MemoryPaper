@@ -5,7 +5,11 @@ import ViewShot, { captureRef } from "react-native-view-shot";
 import * as FileSystem from "expo-file-system";
 import { useSafeAreaInsets, EdgeInsets } from "react-native-safe-area-context";
 
-import { AppSettings, TextPosition } from "../types/settings";
+import {
+  AppSettings,
+  TextPosition,
+  WallpaperTargetScreen,
+} from "../types/settings";
 import {
   loadSettings,
   saveSettings,
@@ -28,6 +32,7 @@ import {
   DEFAULT_TEXT_COLOR,
   DEFAULT_WALLPAPER_BACKGROUND_COLOR,
   DEFAULT_FONT_SIZE,
+  DEFAULT_WALLPAPER_TARGET_SCREEN,
 } from "../config/constants";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("screen");
@@ -40,12 +45,11 @@ export const useMemoryWallpaper = () => {
     textColor: DEFAULT_TEXT_COLOR,
     wallpaperBackgroundColor: DEFAULT_WALLPAPER_BACKGROUND_COLOR,
     fontSize: DEFAULT_FONT_SIZE,
+    wallpaperTargetScreen: DEFAULT_WALLPAPER_TARGET_SCREEN,
   });
-  // State for the live text input, separate from saved settings.reminderText
   const [liveReminderText, setLiveReminderText] = useState<string>(
     settings.reminderText
   );
-
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSettingsLoading, setIsSettingsLoading] = useState<boolean>(true);
@@ -56,7 +60,6 @@ export const useMemoryWallpaper = () => {
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    // When settings are loaded, also update liveReminderText
     setLiveReminderText(settings.reminderText);
   }, [settings.reminderText]);
 
@@ -64,7 +67,6 @@ export const useMemoryWallpaper = () => {
     setIsSettingsLoading(true);
     const loadedSettings = await loadSettings();
     setSettings(loadedSettings);
-    // liveReminderText will be updated by the useEffect above
     setIsSettingsLoading(false);
     if (loadedSettings.autoUpdateEnabled) {
       await registerAppBackgroundTask(loadedSettings.updateInterval);
@@ -77,25 +79,23 @@ export const useMemoryWallpaper = () => {
     loadAndApplySettings();
   }, [loadAndApplySettings]);
 
-  // Modified handleSettingChange
   const handleSettingChange = async <K extends keyof AppSettings>(
     key: K,
     value: AppSettings[K],
-    finalizeUpdate: boolean = true // Default to true for non-text changes
+    finalizeUpdate: boolean = true
   ) => {
-    // Update the main settings state (for UI and non-textual changes)
     const newSettingsSnapshot = { ...settings, [key]: value };
     setSettings(newSettingsSnapshot);
 
     if (finalizeUpdate) {
-      // Only save and trigger side effects if finalizeUpdate is true
       await saveSettings(newSettingsSnapshot);
 
       const relevantChangeForPreGeneration =
         key === "reminderText" ||
         key === "textColor" ||
         key === "wallpaperBackgroundColor" ||
-        key === "fontSize";
+        key === "fontSize" ||
+        key === "wallpaperTargetScreen"; // Added
 
       if (key === "autoUpdateEnabled" || key === "updateInterval") {
         if (newSettingsSnapshot.autoUpdateEnabled) {
@@ -118,10 +118,8 @@ export const useMemoryWallpaper = () => {
     }
   };
 
-  // New handler specifically for reminder text blur
   const handleReminderTextBlur = async () => {
     if (settings.reminderText !== liveReminderText) {
-      // Call handleSettingChange with the updated liveReminderText and finalize a true
       handleSettingChange("reminderText", liveReminderText.trim(), true);
     }
   };
@@ -207,15 +205,11 @@ export const useMemoryWallpaper = () => {
   };
 
   const handleManualSetWallpaper = async () => {
-    // Use liveReminderText for manual set, but ensure it's saved first if different
-    // Or, better, ensure handleReminderTextBlur has been called implicitly or explicitly.
-    // For simplicity here, we assume the user might expect the currently visible text to be used.
     const textToSet = liveReminderText.trim();
     if (!textToSet) {
       Alert.alert("Input Required", "Please enter text for your reminder.");
       return;
     }
-    // If live text is different from saved, save it now.
     if (settings.reminderText !== textToSet) {
       await handleSettingChange("reminderText", textToSet, true);
     }
@@ -235,8 +229,12 @@ export const useMemoryWallpaper = () => {
       });
       if (!imageFileUri)
         throw new Error("Failed to capture image URI for manual set.");
+
       setStatusMessage("Setting wallpaper manually...");
-      const response = await setDeviceWallpaper(imageFileUri, "home");
+      const response = await setDeviceWallpaper(
+        imageFileUri,
+        settings.wallpaperTargetScreen
+      ); // Use selected screen
       if (response.success) {
         setStatusMessage(
           `${response.message} (Pos: T:${newPosition.top.toFixed(
@@ -263,17 +261,17 @@ export const useMemoryWallpaper = () => {
   };
 
   return {
-    settings, // The saved settings
-    liveReminderText, // The text currently in the input field
-    setLiveReminderText, // To update the input field text
+    settings,
+    liveReminderText,
+    setLiveReminderText,
     statusMessage,
     isLoading,
     isSettingsLoading,
     captureSpecificPosition,
     viewShotRef,
     insets,
-    handleSettingChange, // For non-textual settings or direct text save
-    handleReminderTextBlur, // For saving text on blur
+    handleSettingChange,
+    handleReminderTextBlur,
     handlePreGenerateImages,
     handleManualSetWallpaper,
   };
