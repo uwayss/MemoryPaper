@@ -7,7 +7,7 @@ import ViewShot from "react-native-view-shot";
 import WallpaperPreview from "../components/WallpaperPreview";
 import { ManualWallpaperCard } from "../components/main/ManualWallpaperCard";
 import { AutomaticUpdateCard } from "../components/main/AutomaticUpdateCard";
-import { WallpaperCustomizationCard } from "../components/main/WallpaperCustomizationCard"; // New import
+import { WallpaperCustomizationCard } from "../components/main/WallpaperCustomizationCard";
 import { useMemoryWallpaper } from "../hooks/useMemoryWallpaper";
 import { OFFSCREEN_PREVIEW_MULTIPLIER } from "../config/constants";
 
@@ -66,6 +66,7 @@ const MainScreenContent: React.FC = () => {
         onBackgroundColorChange={(color) =>
           handleSettingChange("wallpaperBackgroundColor", color)
         }
+        onFontSizeChange={(size) => handleSettingChange("fontSize", size)}
       />
 
       <AutomaticUpdateCard
@@ -78,13 +79,7 @@ const MainScreenContent: React.FC = () => {
         onIntervalChange={(value) =>
           handleSettingChange("updateInterval", value)
         }
-        onRegeneratePress={() =>
-          handlePreGenerateImages(
-            settings.reminderText,
-            settings.textColor,
-            settings.wallpaperBackgroundColor
-          )
-        }
+        onRegeneratePress={() => handlePreGenerateImages(settings)}
       />
 
       {isLoading &&
@@ -112,6 +107,7 @@ const MainScreenContent: React.FC = () => {
             }
             textColor={settings.textColor}
             backgroundColor={settings.wallpaperBackgroundColor}
+            fontSize={settings.fontSize}
           />
         </ViewShot>
       </View>

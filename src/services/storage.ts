@@ -7,6 +7,7 @@ import {
   DEFAULT_UPDATE_INTERVAL,
   DEFAULT_TEXT_COLOR,
   DEFAULT_WALLPAPER_BACKGROUND_COLOR,
+  DEFAULT_FONT_SIZE,
 } from "../config/constants";
 
 const REMINDER_TEXT_KEY = "REMINDER_TEXT";
@@ -14,6 +15,7 @@ const AUTO_UPDATE_ENABLED_KEY = "AUTO_UPDATE_ENABLED";
 const UPDATE_INTERVAL_KEY = "UPDATE_INTERVAL_KEY";
 const TEXT_COLOR_KEY = "TEXT_COLOR_KEY";
 const WALLPAPER_BACKGROUND_COLOR_KEY = "WALLPAPER_BACKGROUND_COLOR_KEY";
+const FONT_SIZE_KEY = "FONT_SIZE_KEY";
 
 const PRE_GENERATED_IMAGES_KEY = "PRE_GENERATED_IMAGES_KEY";
 const LAST_USED_IMAGE_INDEX_KEY = "LAST_USED_IMAGE_INDEX_KEY";
@@ -34,6 +36,10 @@ export const saveSettings = async (settings: AppSettings): Promise<void> => {
       WALLPAPER_BACKGROUND_COLOR_KEY,
       settings.wallpaperBackgroundColor
     );
+    await AsyncStorage.setItem(
+      FONT_SIZE_KEY,
+      JSON.stringify(settings.fontSize)
+    );
   } catch (e) {
     console.error("Failed to save settings.", e);
   }
@@ -50,6 +56,7 @@ export const loadSettings = async (): Promise<AppSettings> => {
     const wallpaperBackgroundColor = await AsyncStorage.getItem(
       WALLPAPER_BACKGROUND_COLOR_KEY
     );
+    const fontSize = await AsyncStorage.getItem(FONT_SIZE_KEY);
 
     return {
       reminderText: reminderText ?? DEFAULT_REMINDER_TEXT,
@@ -62,6 +69,7 @@ export const loadSettings = async (): Promise<AppSettings> => {
       textColor: textColor ?? DEFAULT_TEXT_COLOR,
       wallpaperBackgroundColor:
         wallpaperBackgroundColor ?? DEFAULT_WALLPAPER_BACKGROUND_COLOR,
+      fontSize: fontSize ? JSON.parse(fontSize) : DEFAULT_FONT_SIZE,
     };
   } catch (e) {
     console.error("Failed to load settings.", e);
@@ -71,6 +79,7 @@ export const loadSettings = async (): Promise<AppSettings> => {
       updateInterval: DEFAULT_UPDATE_INTERVAL,
       textColor: DEFAULT_TEXT_COLOR,
       wallpaperBackgroundColor: DEFAULT_WALLPAPER_BACKGROUND_COLOR,
+      fontSize: DEFAULT_FONT_SIZE,
     };
   }
 };

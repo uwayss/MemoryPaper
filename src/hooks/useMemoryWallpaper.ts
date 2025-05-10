@@ -27,6 +27,7 @@ import {
   DEFAULT_UPDATE_INTERVAL,
   DEFAULT_TEXT_COLOR,
   DEFAULT_WALLPAPER_BACKGROUND_COLOR,
+  DEFAULT_FONT_SIZE,
 } from "../config/constants";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("screen");
@@ -38,6 +39,7 @@ export const useMemoryWallpaper = () => {
     updateInterval: DEFAULT_UPDATE_INTERVAL,
     textColor: DEFAULT_TEXT_COLOR,
     wallpaperBackgroundColor: DEFAULT_WALLPAPER_BACKGROUND_COLOR,
+    fontSize: DEFAULT_FONT_SIZE,
   });
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -72,15 +74,17 @@ export const useMemoryWallpaper = () => {
     setSettings(newSettings);
     await saveSettings(newSettings);
 
+    const relevantChangeForPreGeneration =
+      key === "reminderText" ||
+      key === "textColor" ||
+      key === "wallpaperBackgroundColor" ||
+      key === "fontSize";
+
     if (key === "autoUpdateEnabled" || key === "updateInterval") {
       if (newSettings.autoUpdateEnabled) {
         await registerAppBackgroundTask(newSettings.updateInterval);
         if (newSettings.reminderText.trim()) {
-          await handlePreGenerateImages(
-            newSettings.reminderText,
-            newSettings.textColor,
-            newSettings.wallpaperBackgroundColor
-          );
+          await handlePreGenerateImages(newSettings);
         }
       } else {
         await unregisterAppBackgroundTask();
@@ -88,17 +92,11 @@ export const useMemoryWallpaper = () => {
     }
 
     if (
-      (key === "reminderText" ||
-        key === "textColor" ||
-        key === "wallpaperBackgroundColor") &&
+      relevantChangeForPreGeneration &&
       newSettings.autoUpdateEnabled &&
       newSettings.reminderText.trim()
     ) {
-      await handlePreGenerateImages(
-        newSettings.reminderText,
-        newSettings.textColor,
-        newSettings.wallpaperBackgroundColor
-      );
+      await handlePreGenerateImages(newSettings);
     }
   };
 
@@ -133,12 +131,8 @@ export const useMemoryWallpaper = () => {
     []
   );
 
-  const handlePreGenerateImages = async (
-    textToRender: string,
-    textColor: string,
-    wallpaperBackgroundColor: string
-  ) => {
-    if (!textToRender.trim()) {
+  const handlePreGenerateImages = async (currentSettings: AppSettings) => {
+    if (!currentSettings.reminderText.trim()) {
       setStatusMessage("Cannot pre-generate images with empty text.");
       return;
     }

@@ -21,5 +21,13 @@ export const DEFAULT_AUTO_UPDATE_ENABLED = false;
 export const DEFAULT_UPDATE_INTERVAL = 15; // minutes
 export const DEFAULT_TEXT_COLOR = "#FFFFFF";
 export const DEFAULT_WALLPAPER_BACKGROUND_COLOR = "#000000";
+export const DEFAULT_FONT_SIZE = 30;
+
+export const FONT_SIZE_OPTIONS = [
+  { label: "Small (24pt)", value: 24 },
+  { label: "Medium (30pt)", value: 30 },
+  { label: "Large (36pt)", value: 36 },
+  { label: "X-Large (48pt)", value: 48 },
+];
 
 export const CAPTURE_DELAY_MS = 100;
