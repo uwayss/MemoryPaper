@@ -1,17 +1,17 @@
 // src/services/storage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AppSettings } from "../types/settings";
+import {
+  DEFAULT_REMINDER_TEXT,
+  DEFAULT_AUTO_UPDATE_ENABLED,
+  DEFAULT_UPDATE_INTERVAL,
+} from "../config/constants";
 
 const REMINDER_TEXT_KEY = "REMINDER_TEXT";
 const AUTO_UPDATE_ENABLED_KEY = "AUTO_UPDATE_ENABLED";
 const UPDATE_INTERVAL_KEY = "UPDATE_INTERVAL_KEY";
 const PRE_GENERATED_IMAGES_KEY = "PRE_GENERATED_IMAGES_KEY";
 const LAST_USED_IMAGE_INDEX_KEY = "LAST_USED_IMAGE_INDEX_KEY";
-
-export interface AppSettings {
-  reminderText: string;
-  autoUpdateEnabled: boolean;
-  updateInterval: number;
-}
 
 export const saveSettings = async (settings: AppSettings): Promise<void> => {
   try {
@@ -38,18 +38,20 @@ export const loadSettings = async (): Promise<AppSettings> => {
     const updateInterval = await AsyncStorage.getItem(UPDATE_INTERVAL_KEY);
 
     return {
-      reminderText: reminderText ?? "Your reminder here!",
+      reminderText: reminderText ?? DEFAULT_REMINDER_TEXT,
       autoUpdateEnabled: autoUpdateEnabled
         ? JSON.parse(autoUpdateEnabled)
-        : false,
-      updateInterval: updateInterval ? JSON.parse(updateInterval) : 15,
+        : DEFAULT_AUTO_UPDATE_ENABLED,
+      updateInterval: updateInterval
+        ? JSON.parse(updateInterval)
+        : DEFAULT_UPDATE_INTERVAL,
     };
   } catch (e) {
     console.error("Failed to load settings.", e);
     return {
-      reminderText: "Your reminder here!",
-      autoUpdateEnabled: false,
-      updateInterval: 15,
+      reminderText: DEFAULT_REMINDER_TEXT,
+      autoUpdateEnabled: DEFAULT_AUTO_UPDATE_ENABLED,
+      updateInterval: DEFAULT_UPDATE_INTERVAL,
     };
   }
 };
