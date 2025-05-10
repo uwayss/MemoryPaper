@@ -5,11 +5,16 @@ import {
   DEFAULT_REMINDER_TEXT,
   DEFAULT_AUTO_UPDATE_ENABLED,
   DEFAULT_UPDATE_INTERVAL,
+  DEFAULT_TEXT_COLOR,
+  DEFAULT_WALLPAPER_BACKGROUND_COLOR,
 } from "../config/constants";
 
 const REMINDER_TEXT_KEY = "REMINDER_TEXT";
 const AUTO_UPDATE_ENABLED_KEY = "AUTO_UPDATE_ENABLED";
 const UPDATE_INTERVAL_KEY = "UPDATE_INTERVAL_KEY";
+const TEXT_COLOR_KEY = "TEXT_COLOR_KEY";
+const WALLPAPER_BACKGROUND_COLOR_KEY = "WALLPAPER_BACKGROUND_COLOR_KEY";
+
 const PRE_GENERATED_IMAGES_KEY = "PRE_GENERATED_IMAGES_KEY";
 const LAST_USED_IMAGE_INDEX_KEY = "LAST_USED_IMAGE_INDEX_KEY";
 
@@ -24,6 +29,11 @@ export const saveSettings = async (settings: AppSettings): Promise<void> => {
       UPDATE_INTERVAL_KEY,
       JSON.stringify(settings.updateInterval)
     );
+    await AsyncStorage.setItem(TEXT_COLOR_KEY, settings.textColor);
+    await AsyncStorage.setItem(
+      WALLPAPER_BACKGROUND_COLOR_KEY,
+      settings.wallpaperBackgroundColor
+    );
   } catch (e) {
     console.error("Failed to save settings.", e);
   }
@@ -36,6 +46,10 @@ export const loadSettings = async (): Promise<AppSettings> => {
       AUTO_UPDATE_ENABLED_KEY
     );
     const updateInterval = await AsyncStorage.getItem(UPDATE_INTERVAL_KEY);
+    const textColor = await AsyncStorage.getItem(TEXT_COLOR_KEY);
+    const wallpaperBackgroundColor = await AsyncStorage.getItem(
+      WALLPAPER_BACKGROUND_COLOR_KEY
+    );
 
     return {
       reminderText: reminderText ?? DEFAULT_REMINDER_TEXT,
@@ -45,6 +59,9 @@ export const loadSettings = async (): Promise<AppSettings> => {
       updateInterval: updateInterval
         ? JSON.parse(updateInterval)
         : DEFAULT_UPDATE_INTERVAL,
+      textColor: textColor ?? DEFAULT_TEXT_COLOR,
+      wallpaperBackgroundColor:
+        wallpaperBackgroundColor ?? DEFAULT_WALLPAPER_BACKGROUND_COLOR,
     };
   } catch (e) {
     console.error("Failed to load settings.", e);
@@ -52,6 +69,8 @@ export const loadSettings = async (): Promise<AppSettings> => {
       reminderText: DEFAULT_REMINDER_TEXT,
       autoUpdateEnabled: DEFAULT_AUTO_UPDATE_ENABLED,
       updateInterval: DEFAULT_UPDATE_INTERVAL,
+      textColor: DEFAULT_TEXT_COLOR,
+      wallpaperBackgroundColor: DEFAULT_WALLPAPER_BACKGROUND_COLOR,
     };
   }
 };

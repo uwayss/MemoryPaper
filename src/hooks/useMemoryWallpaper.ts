@@ -25,6 +25,8 @@ import {
   DEFAULT_REMINDER_TEXT,
   DEFAULT_AUTO_UPDATE_ENABLED,
   DEFAULT_UPDATE_INTERVAL,
+  DEFAULT_TEXT_COLOR,
+  DEFAULT_WALLPAPER_BACKGROUND_COLOR,
 } from "../config/constants";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("screen");
@@ -34,6 +36,8 @@ export const useMemoryWallpaper = () => {
     reminderText: DEFAULT_REMINDER_TEXT,
     autoUpdateEnabled: DEFAULT_AUTO_UPDATE_ENABLED,
     updateInterval: DEFAULT_UPDATE_INTERVAL,
+    textColor: DEFAULT_TEXT_COLOR,
+    wallpaperBackgroundColor: DEFAULT_WALLPAPER_BACKGROUND_COLOR,
   });
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -72,7 +76,11 @@ export const useMemoryWallpaper = () => {
       if (newSettings.autoUpdateEnabled) {
         await registerAppBackgroundTask(newSettings.updateInterval);
         if (newSettings.reminderText.trim()) {
-          await handlePreGenerateImages(newSettings.reminderText);
+          await handlePreGenerateImages(
+            newSettings.reminderText,
+            newSettings.textColor,
+            newSettings.wallpaperBackgroundColor
+          );
         }
       } else {
         await unregisterAppBackgroundTask();
@@ -80,11 +88,17 @@ export const useMemoryWallpaper = () => {
     }
 
     if (
-      key === "reminderText" &&
+      (key === "reminderText" ||
+        key === "textColor" ||
+        key === "wallpaperBackgroundColor") &&
       newSettings.autoUpdateEnabled &&
       newSettings.reminderText.trim()
     ) {
-      await handlePreGenerateImages(newSettings.reminderText);
+      await handlePreGenerateImages(
+        newSettings.reminderText,
+        newSettings.textColor,
+        newSettings.wallpaperBackgroundColor
+      );
     }
   };
 
@@ -119,7 +133,11 @@ export const useMemoryWallpaper = () => {
     []
   );
 
-  const handlePreGenerateImages = async (textToRender: string) => {
+  const handlePreGenerateImages = async (
+    textToRender: string,
+    textColor: string,
+    wallpaperBackgroundColor: string
+  ) => {
     if (!textToRender.trim()) {
       setStatusMessage("Cannot pre-generate images with empty text.");
       return;

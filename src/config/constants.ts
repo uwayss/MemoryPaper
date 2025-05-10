@@ -19,5 +19,7 @@ export const UPDATE_INTERVALS = [
 export const DEFAULT_REMINDER_TEXT = "Your reminder here!";
 export const DEFAULT_AUTO_UPDATE_ENABLED = false;
 export const DEFAULT_UPDATE_INTERVAL = 15; // minutes
+export const DEFAULT_TEXT_COLOR = "#FFFFFF";
+export const DEFAULT_WALLPAPER_BACKGROUND_COLOR = "#000000";
 
 export const CAPTURE_DELAY_MS = 100;
